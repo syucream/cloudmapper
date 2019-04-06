@@ -198,6 +198,10 @@ def collect(arguments):
 
         parameters = {}
         for region in region_list['Regions']:
+            # FIXME For temporary logic to avoid long run; filter only specified region
+            if region['RegionName'] != "ap-northeast-1":
+                continue
+
             dynamic_parameter = None
             # Only call universal services in default region
             if runner['Service'] in universal_services:
