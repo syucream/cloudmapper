@@ -419,13 +419,6 @@ def build_data_structure(account_data, config, outputfilter):
                 if not has_match:
                     del nodes[node_id]
 
-        # FIXME quick name-based filter
-        node_key = "production"
-        for node_id in list(nodes):
-            node = nodes[node_id]
-            if node.name.find(node_key) == -1:
-                del nodes[node_id]
-
         # Add the nodes to their respective subnets
         for node_arn in list(nodes):
             node = nodes[node_arn]
