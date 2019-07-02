@@ -568,6 +568,11 @@ def build_data_structure(account_data, config, outputfilter):
         cytoscape_json.append(c.cytoscape_data())
     log("- {} connections built".format(len(connections)))
 
+    # Omit node_data if needed
+    if not outputfilter["node_data"]:
+        for e in cytoscape_json:
+            del e["data"]["node_data"]
+
     # Check if we have a lot of data, and if so, show a warning
     # Numbers chosen here are arbitrary
     MAX_NODES_FOR_WARNING = 200
@@ -626,12 +631,17 @@ def run(arguments):
                         dest='collapse_asgs', action='store_true')
     parser.add_argument("--no-collapse-asgs", help="Show all EC2 instances of Auto Scaling Groups",
                         dest='collapse_asgs', action='store_false')
+    parser.add_argument("--node_data", help="Include node_data used to render node details",
+                        dest='node_data', action='store_true')
+    parser.add_argument("--no-node_data", help="Do not include node_data used to render node details",
+                        dest='node_data', action='store_false')
 
     parser.set_defaults(internal_edges=True)
     parser.set_defaults(inter_rds_edges=False)
     parser.set_defaults(read_replicas=True)
     parser.set_defaults(azs=True)
     parser.set_defaults(collapse_asgs=True)
+    parser.set_defaults(node_data=True)
 
     args = parser.parse_args(arguments)
 
@@ -653,6 +663,7 @@ def run(arguments):
     outputfilter["azs"] = args.azs
     outputfilter["collapse_by_tag"] = args.collapse_by_tag
     outputfilter["collapse_asgs"] = args.collapse_asgs
+    outputfilter["node_data"] = args.node_data
 
     # Read accounts file
     try:
