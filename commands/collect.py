@@ -217,6 +217,12 @@ def collect(arguments):
         parameters = {}
         for region in region_list['Regions']:
             dynamic_parameter = None
+            # region filter
+            if arguments.include_regions and region["RegionName"] not in arguments.include_regions:
+                continue
+            if arguments.exclude_regions and region["RegionName"] in arguments.exclude_regions:
+                continue
+
             # Only call universal services in default region
             if runner['Service'] in universal_services:
                 if region['RegionName'] != default_region:
@@ -385,13 +391,42 @@ def collect(arguments):
 
 def run(arguments):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", help="Config file name",
-                        default="config.json", type=str)
-    parser.add_argument("--account", help="Account to collect from",
-                        required=False, type=str, dest='account_name')
-    parser.add_argument("--profile", help="AWS profile name",
-                        required=False, type=str, dest='profile_name')
-    parser.add_argument('--clean', help='Remove any existing data for the account before gathering', action='store_true')
+    parser.add_argument(
+        "--config", help="Config file name", default="config.json", type=str
+    )
+    parser.add_argument(
+        "--account",
+        help="Account to collect from",
+        required=False,
+        type=str,
+        dest="account_name",
+    )
+    parser.add_argument(
+        "--profile",
+        help="AWS profile name",
+        required=False,
+        type=str,
+        dest="profile_name",
+    )
+    parser.add_argument(
+        "--clean",
+        help="Remove any existing data for the account before gathering",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--include-regions",
+        help="Collect resources belonging to only specified comma-separated regions",
+        required=False,
+        type=str,
+        dest="include_regions",
+    )
+    parser.add_argument(
+        "--exclude-regions",
+        help="Collect resources excepts specified comma-separated regions; if --include-region specified, it's ignored",
+        required=False,
+        type=str,
+        dest="exclude_regions",
+    )
 
     args = parser.parse_args(arguments)
 
@@ -403,5 +438,14 @@ def run(arguments):
         except ValueError as e:
             exit("ERROR: Config file \"{}\" could not be loaded ({}), see config.json.demo for an example".format(args.config, e))
         args.account_name = get_account(args.account_name, config, args.config)['name']
+
+    if args.include_regions:
+        args.include_regions = args.include_regions.replace(" ", "").split(",")
+    if args.exclude_regions:
+        # include_region is primary
+        if args.include_regions:
+            args.exclude_regions = []
+        else:
+            args.exclude_regions = args.exclude_regions.replace(" ", "").split(",")
 
     collect(args)
